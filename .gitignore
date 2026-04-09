@@ -40,3 +40,11 @@ build/
 *.log
 .env
 .firebase/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# Firebase config (contains secrets)
+google-services.json
+GoogleService-Info.plist
