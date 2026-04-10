@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../models/goal.dart';
@@ -11,6 +12,7 @@ import '../../../providers/auth_notifier.dart';
 import '../../../providers/goal_notifier.dart';
 import '../../../providers/sip_entries_provider.dart';
 import '../../../services/goal_repository.dart';
+import '../../../services/sip_projection_engine.dart';
 import '../../../shared/constants.dart';
 import '../widgets/goal_form.dart' show formatGoalDate;
 
@@ -163,6 +165,11 @@ class _GoalDetailView extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
+
+          // ── Projection chart ────────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _ProjectionChart(goal: goal),
           ),
 
           // ── SIP entries header ──────────────────────────────────────────
@@ -533,27 +540,209 @@ String _fmt(double n) {
   return n.toStringAsFixed(0);
 }
 
-/// Estimates the month when [goal] will reach its target using the SIP
-/// compound-interest formula.
+/// Estimates the month when [goal] will reach its target using the SIP engine.
 DateTime? _projectCompletion(Goal goal) {
-  final remaining = goal.targetAmount - goal.currentAmount;
-  if (remaining <= 0) return null; // already reached
-  if (goal.monthlyContribution <= 0) return null;
-
-  final r = goal.expectedReturnRate / 100 / 12;
-  final pmt = goal.monthlyContribution;
-
-  final double n;
-  if (r < 1e-6) {
-    n = remaining / pmt;
-  } else {
-    final val = 1 + remaining * r / pmt;
-    if (val <= 0) return null;
-    n = math.log(val) / math.log(1 + r);
-  }
-
-  if (n.isNaN || n.isInfinite || n < 0) return null;
-  final months = n.ceil();
+  final months = SipProjectionEngine.monthsToTarget(
+    targetAmount: goal.targetAmount,
+    currentAmount: goal.currentAmount,
+    monthlyContribution: goal.monthlyContribution,
+    annualReturnRate: goal.expectedReturnRate,
+  );
+  if (months == null || months == 0) return null;
   final now = DateTime.now();
   return DateTime(now.year, now.month + months);
+}
+
+// ── Projection chart ──────────────────────────────────────────────────────────
+
+class _ProjectionChart extends StatelessWidget {
+  const _ProjectionChart({required this.goal});
+
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = goal.targetAmount - goal.currentAmount;
+    if (remaining <= 0) return const SizedBox.shrink();
+
+    final totalMonths = SipProjectionEngine.monthsToTarget(
+      targetAmount: goal.targetAmount,
+      currentAmount: goal.currentAmount,
+      monthlyContribution: goal.monthlyContribution,
+      annualReturnRate: goal.expectedReturnRate,
+    );
+    if (totalMonths == null || totalMonths == 0) return const SizedBox.shrink();
+
+    final projections = SipProjectionEngine.monthByMonth(
+      monthlyAmount: goal.monthlyContribution,
+      annualReturnRate: goal.expectedReturnRate,
+      months: totalMonths,
+    );
+    if (projections.isEmpty) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Downsample for performance.
+    final step = (projections.length / 120).ceil().clamp(1, 999);
+    final sampled = [
+      for (var i = 0; i < projections.length; i += step) projections[i],
+      projections.last,
+    ];
+
+    // Offset by currentAmount so y-axis reflects total portfolio value.
+    final investedSpots = sampled
+        .map((p) => FlSpot(p.month.toDouble(), goal.currentAmount + p.invested))
+        .toList();
+    final projectedSpots = sampled
+        .map((p) =>
+            FlSpot(p.month.toDouble(), goal.currentAmount + p.projectedValue))
+        .toList();
+
+    final maxY =
+        math.max(goal.targetAmount, projectedSpots.last.y) * 1.05;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 20, 20, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8, bottom: 12),
+              child: Row(
+                children: [
+                  Text('Projection',
+                      style: Theme.of(context).textTheme.titleSmall),
+                  const Spacer(),
+                  _ChartLegend(
+                      color: colorScheme.outlineVariant, label: 'Invested'),
+                  const SizedBox(width: 12),
+                  _ChartLegend(
+                      color: colorScheme.primary, label: 'Projected'),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  minX: 1,
+                  maxX: totalMonths.toDouble(),
+                  minY: 0,
+                  maxY: maxY,
+                  extraLinesData: ExtraLinesData(
+                    horizontalLines: [
+                      HorizontalLine(
+                        y: goal.targetAmount,
+                        color: colorScheme.tertiary,
+                        strokeWidth: 1,
+                        dashArray: [6, 4],
+                        label: HorizontalLineLabel(
+                          show: true,
+                          alignment: Alignment.topRight,
+                          labelResolver: (_) => 'Target',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colorScheme.tertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (_) => FlLine(
+                      color: colorScheme.outlineVariant,
+                      strokeWidth: 0.5,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 56,
+                        getTitlesWidget: (v, _) => Text(
+                          '₹${_fmt(v)}',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval:
+                            (totalMonths / 4).clamp(12, 60).toDouble(),
+                        getTitlesWidget: (v, _) {
+                          final yr = (v / 12).round();
+                          return Text(
+                            '${yr}yr',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          );
+                        },
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: investedSpots,
+                      isCurved: false,
+                      color: colorScheme.outlineVariant,
+                      barWidth: 1.5,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: projectedSpots,
+                      isCurved: true,
+                      preventCurveOverShooting: true,
+                      color: colorScheme.primary,
+                      barWidth: 2.5,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: colorScheme.primary.withOpacity(0.08),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartLegend extends StatelessWidget {
+  const _ChartLegend({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 20,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+      ],
+    );
+  }
 }
