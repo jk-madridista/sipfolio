@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper ──────────────────────────────────────────────────────────────
+    // A request is authenticated when Firebase Auth provides a uid.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // The requesting user owns the document (uid matches the path segment).
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ── User profiles ────────────────────────────────────────────────────────
+    // Only the profile owner may read or write their own document.
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // ── Goals ──────────────────────────────────────────────────────────────
+      // Goals are stored as a subcollection under the user's document.
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId);
+
+        // ── SIP Entries ────────────────────────────────────────────────────
+        // SIP entry records are a subcollection under each goal.
+        match /sipEntries/{entryId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+    }
+
+    // Deny all other reads and writes by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
