@@ -1,6 +1,7 @@
 /// Named route paths used with GoRouter.
 abstract final class AppRoutes {
   static const login = '/login';
+  static const emailSignIn = '/login/email';
   static const dashboard = '/';
   static const goals = '/goals';
   static const sip = '/sip';
