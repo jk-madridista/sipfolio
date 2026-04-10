@@ -6,6 +6,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../features/auth/screens/email_signin_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
+import '../features/goals/screens/create_goal_screen.dart';
+import '../features/goals/screens/edit_goal_screen.dart';
+import '../features/goals/screens/goal_detail_screen.dart';
 import '../features/goals/screens/goals_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
 import '../features/sip/screens/sip_screen.dart';
@@ -41,16 +44,15 @@ GoRouter router(Ref ref) {
           state.matchedLocation == AppRoutes.emailSignIn;
 
       if (!isLoggedIn && !isAuthRoute) {
-        // Unauthenticated user trying to reach a protected route.
         return AppRoutes.login;
       }
       if (isLoggedIn && isAuthRoute) {
-        // Already signed in — skip auth screens.
         return AppRoutes.dashboard;
       }
       return null;
     },
     routes: [
+      // ── Auth ─────────────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.login,
         name: AppRoutes.login,
@@ -61,15 +63,12 @@ GoRouter router(Ref ref) {
         name: AppRoutes.emailSignIn,
         builder: (context, state) => const EmailSignInScreen(),
       ),
+
+      // ── App shell ────────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.dashboard,
         name: AppRoutes.dashboard,
         builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.goals,
-        name: AppRoutes.goals,
-        builder: (context, state) => const GoalsScreen(),
       ),
       GoRoute(
         path: AppRoutes.sip,
@@ -80,6 +79,36 @@ GoRouter router(Ref ref) {
         path: AppRoutes.settings,
         name: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // ── Goals (nested) ───────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.goals,
+        name: AppRoutes.goals,
+        builder: (context, state) => const GoalsScreen(),
+        routes: [
+          GoRoute(
+            path: 'create',
+            name: AppRoutes.goalCreate,
+            builder: (context, state) => const CreateGoalScreen(),
+          ),
+          GoRoute(
+            path: ':id',
+            name: AppRoutes.goalDetail,
+            builder: (context, state) => GoalDetailScreen(
+              goalId: state.pathParameters['id']!,
+            ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                name: AppRoutes.goalEdit,
+                builder: (context, state) => EditGoalScreen(
+                  goalId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
