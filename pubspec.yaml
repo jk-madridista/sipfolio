@@ -29,6 +29,15 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
+  # Notifications
+  firebase_messaging: ^15.1.0
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.9.4
+  flutter_timezone: ^1.0.4
+
+  # Persistence
+  shared_preferences: ^2.3.0
+
   # Charts
   fl_chart: ^0.69.0
 

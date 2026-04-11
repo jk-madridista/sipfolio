@@ -30,3 +30,21 @@ abstract final class SipDefaults {
   static const annualReturnRatePercent = 12.0;
   static const contributionFrequencyMonths = 1;
 }
+
+/// Android notification channel configuration.
+abstract final class NotificationConfig {
+  static const channelId = 'sip_reminders';
+  static const channelName = 'SIP Reminders';
+  static const channelDesc = 'Monthly reminders before your SIP due date';
+
+  /// Day of month on which the reminder fires — the 28th gives ~2–3 days
+  /// of lead time before the 1st-of-month SIP date.
+  static const reminderDayOfMonth = 28;
+  static const reminderHour = 9;
+  static const reminderMinute = 0;
+}
+
+/// SharedPreferences key names.
+abstract final class PrefsKeys {
+  static const notificationsEnabled = 'notifications_enabled';
+}

@@ -1,19 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../models/goal.dart';
 import '../../../providers/auth_notifier.dart';
+import '../../../providers/goal_notifier.dart';
+import '../../../providers/notification_provider.dart';
+import '../../../services/notification_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final prefsAsync = ref.watch(notificationPreferencesProvider);
+    final notificationsEnabled = prefsAsync.valueOrNull ?? true;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
       ),
       body: ListView(
         children: [
+          // ── Notifications ─────────────────────────────────────────────────
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_outlined),
+            title: const Text('SIP Reminders'),
+            subtitle: const Text(
+              'Monthly reminder on the 28th — 2–3 days before your '
+              'next SIP date',
+            ),
+            value: notificationsEnabled,
+            onChanged: prefsAsync.isLoading
+                ? null
+                : (enabled) => _onNotificationToggle(ref, enabled),
+          ),
+          const Divider(),
+
+          // ── Premium ───────────────────────────────────────────────────────
           ListTile(
             leading: const Icon(Icons.workspace_premium_outlined),
             title: const Text('Upgrade to Premium'),
@@ -24,6 +47,8 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const Divider(),
+
+          // ── Sign out ──────────────────────────────────────────────────────
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sign Out'),
@@ -32,6 +57,24 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _onNotificationToggle(WidgetRef ref, bool enabled) async {
+    await ref
+        .read(notificationPreferencesProvider.notifier)
+        .setEnabled(enabled);
+
+    // When re-enabling, schedule reminders for every currently active goal
+    // so the user doesn't have to edit each goal individually.
+    if (enabled) {
+      final goals = ref.read(goalNotifierProvider).valueOrNull ?? <Goal>[];
+      final service = ref.read(notificationServiceProvider);
+      for (final goal in goals) {
+        if (goal.isActive) {
+          await service.scheduleMonthlyReminder(goal);
+        }
+      }
+    }
   }
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
