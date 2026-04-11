@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../models/goal.dart';
 import '../../../providers/auth_notifier.dart';
 import '../../../providers/goal_notifier.dart';
+import '../../../providers/user_profile_provider.dart';
 import '../../../services/sip_projection_engine.dart';
 import '../../../shared/constants.dart';
 
@@ -16,6 +18,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authNotifierProvider).valueOrNull;
     final goalsAsync = ref.watch(goalNotifierProvider);
+    final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
       body: goalsAsync.when(
@@ -39,8 +42,7 @@ class DashboardScreen extends ConsumerWidget {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _EmptyState(
-                    onCreateTap: () =>
-                        context.pushNamed(AppRoutes.goalCreate),
+                    onCreateTap: () => _navigateToCreate(context, ref),
                   ),
                 )
               else
@@ -56,41 +58,148 @@ class DashboardScreen extends ConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              context.goNamed(AppRoutes.dashboard);
-            case 1:
-              context.goNamed(AppRoutes.goals);
-            case 2:
-              context.goNamed(AppRoutes.sip);
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.flag_outlined),
-            selectedIcon: Icon(Icons.flag),
-            label: 'Goals',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calculate_outlined),
-            selectedIcon: Icon(Icons.calculate),
-            label: 'SIP Calc',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Banner ad — shown only for free users.
+          if (!isPremium) const _BannerAdWidget(),
+          NavigationBar(
+            selectedIndex: 0,
+            onDestinationSelected: (index) {
+              switch (index) {
+                case 0:
+                  context.goNamed(AppRoutes.dashboard);
+                case 1:
+                  context.goNamed(AppRoutes.goals);
+                case 2:
+                  context.goNamed(AppRoutes.sip);
+              }
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.flag_outlined),
+                selectedIcon: Icon(Icons.flag),
+                label: 'Goals',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calculate_outlined),
+                selectedIcon: Icon(Icons.calculate),
+                label: 'SIP Calc',
+              ),
+            ],
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.pushNamed(AppRoutes.goalCreate),
+        onPressed: () => _navigateToCreate(context, ref),
         tooltip: 'Create goal',
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  /// Navigates to [CreateGoalScreen], or to [PremiumUpgradeScreen] if the
+  /// free-tier goal limit has been reached.
+  void _navigateToCreate(BuildContext context, WidgetRef ref) {
+    final isPremium = ref.read(isPremiumProvider);
+    final goals = ref.read(goalNotifierProvider).valueOrNull ?? [];
+    if (!isPremium && goals.length >= FreeTier.maxGoals) {
+      _showUpgradeDialog(context);
+      return;
+    }
+    context.pushNamed(AppRoutes.goalCreate);
+  }
+
+  void _showUpgradeDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.workspace_premium, size: 32),
+        title: const Text('Goal limit reached'),
+        content: Text(
+          'Free accounts support up to ${FreeTier.maxGoals} goals. '
+          'Upgrade to Premium for unlimited goals and more.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.pushNamed(AppRoutes.premiumUpgrade);
+            },
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Banner ad ─────────────────────────────────────────────────────────────────
+
+/// Loads and displays an AdMob banner. Uses the public test ad-unit ID so no
+/// real inventory is needed during development. Swap to a production unit ID
+/// before release.
+class _BannerAdWidget extends StatefulWidget {
+  const _BannerAdWidget();
+
+  /// AdMob test banner ad unit ID (Android).
+  static const _adUnitId = 'ca-app-pub-3940256099942544/6300978111';
+
+  @override
+  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
+}
+
+class _BannerAdWidgetState extends State<_BannerAdWidget> {
+  BannerAd? _bannerAd;
+  bool _isLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAd();
+  }
+
+  void _loadAd() {
+    final ad = BannerAd(
+      adUnitId: _BannerAdWidget._adUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() => _isLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('BannerAd failed to load: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    ad.load();
+    _bannerAd = ad;
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
+    return SizedBox(
+      height: _bannerAd!.size.height.toDouble(),
+      width: double.infinity,
+      child: AdWidget(ad: _bannerAd!),
     );
   }
 }

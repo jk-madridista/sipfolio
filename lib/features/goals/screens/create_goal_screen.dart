@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../providers/goal_notifier.dart';
+import '../../../shared/constants.dart';
 import '../widgets/goal_form.dart';
 
 class CreateGoalScreen extends ConsumerStatefulWidget {
@@ -25,6 +27,34 @@ class _CreateGoalScreenState extends ConsumerState<CreateGoalScreen> {
             targetDate: data.targetDate,
           );
       if (mounted) Navigator.of(context).pop();
+    } on GoalLimitReachedException {
+      if (!mounted) return;
+      // Redirect the user to the premium upgrade screen instead of showing
+      // a generic error — they hit the free-tier cap.
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.workspace_premium, size: 32),
+          title: const Text('Goal limit reached'),
+          content: Text(
+            'Free accounts support up to ${FreeTier.maxGoals} goals. '
+            'Upgrade to Premium for unlimited goals and more.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Not now'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.pushNamed(AppRoutes.premiumUpgrade);
+              },
+              child: const Text('Upgrade'),
+            ),
+          ],
+        ),
+      );
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

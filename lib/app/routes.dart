@@ -10,6 +10,7 @@ import '../features/goals/screens/create_goal_screen.dart';
 import '../features/goals/screens/edit_goal_screen.dart';
 import '../features/goals/screens/goal_detail_screen.dart';
 import '../features/goals/screens/goals_screen.dart';
+import '../features/premium/screens/premium_upgrade_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
 import '../features/sip/screens/sip_screen.dart';
 import '../providers/auth_notifier.dart';
@@ -79,6 +80,11 @@ GoRouter router(Ref ref) {
         path: AppRoutes.settings,
         name: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.premiumUpgrade,
+        name: AppRoutes.premiumUpgrade,
+        builder: (context, state) => const PremiumUpgradeScreen(),
       ),
 
       // ── Goals (nested) ───────────────────────────────────────────────────
