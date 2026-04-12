@@ -6,11 +6,19 @@ abstract final class AppRoutes {
   static const goals = '/goals';
   static const sip = '/sip';
   static const settings = '/settings';
+  static const premiumUpgrade = '/premium';
 
   // Goal sub-routes (used as GoRouter route names).
   static const goalCreate = 'goal-create';
   static const goalDetail = 'goal-detail';
   static const goalEdit = 'goal-edit';
+}
+
+/// App metadata.
+abstract final class AppMeta {
+  static const version = '1.0.0';
+  static const buildNumber = '1';
+  static const versionString = '$version ($buildNumber)';
 }
 
 /// Firestore collection names.

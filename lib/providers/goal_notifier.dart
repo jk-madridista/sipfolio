@@ -4,10 +4,23 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/goal.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/notification_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../services/goal_repository.dart';
 import '../services/notification_service.dart';
+import '../shared/constants.dart';
 
 part 'goal_notifier.g.dart';
+
+/// Thrown by [GoalNotifier.createGoal] when a free-tier user attempts to
+/// exceed [FreeTier.maxGoals].
+class GoalLimitReachedException implements Exception {
+  const GoalLimitReachedException();
+
+  @override
+  String toString() =>
+      'You have reached the free-tier limit of ${FreeTier.maxGoals} goals. '
+      'Upgrade to Premium for unlimited goals.';
+}
 
 /// Streams the authenticated user's goals and exposes CRUD operations.
 ///
@@ -24,6 +37,9 @@ class GoalNotifier extends _$GoalNotifier {
 
   /// Creates a new goal and, when notifications are enabled, schedules a
   /// monthly SIP reminder for it.
+  ///
+  /// Throws [GoalLimitReachedException] if the user is on the free tier and
+  /// already has [FreeTier.maxGoals] goals.
   Future<void> createGoal({
     required String title,
     required double targetAmount,
@@ -33,6 +49,14 @@ class GoalNotifier extends _$GoalNotifier {
   }) async {
     final user = ref.read(authNotifierProvider).valueOrNull;
     if (user == null) throw StateError('Not authenticated');
+
+    // Free-tier limit check — reads the latest known value without awaiting
+    // a network round-trip, so there is no extra latency on the happy path.
+    final isPremium = ref.read(isPremiumProvider);
+    final currentGoals = ref.read(goalNotifierProvider).valueOrNull ?? [];
+    if (!isPremium && currentGoals.length >= FreeTier.maxGoals) {
+      throw const GoalLimitReachedException();
+    }
 
     final repo = ref.read(goalRepositoryProvider);
     final id = repo.generateGoalId(user.uid);

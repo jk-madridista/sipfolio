@@ -40,4 +40,18 @@ class UserProfileRepository {
     if (!snapshot.exists || snapshot.data() == null) return null;
     return UserProfile.fromJson(snapshot.data()!);
   }
+
+  /// Streams the [UserProfile] for [uid], emitting null when the document
+  /// does not exist. Keeps the local state in sync with Firestore changes
+  /// (e.g. when a webhook flips [isPremium] to true server-side).
+  Stream<UserProfile?> watchUserProfile(String uid) {
+    return _firestore
+        .collection(Collections.users)
+        .doc(uid)
+        .snapshots()
+        .map((snap) {
+      if (!snap.exists || snap.data() == null) return null;
+      return UserProfile.fromJson(snap.data()!);
+    });
+  }
 }

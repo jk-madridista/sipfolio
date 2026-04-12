@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../models/goal.dart';
 import '../../../providers/goal_notifier.dart';
+import '../../../providers/user_profile_provider.dart';
 import '../../../shared/constants.dart';
 
 class GoalsScreen extends ConsumerWidget {
@@ -21,7 +22,7 @@ class GoalsScreen extends ConsumerWidget {
         data: (goals) {
           if (goals.isEmpty) {
             return _EmptyState(
-              onCreateTap: () => context.pushNamed(AppRoutes.goalCreate),
+              onCreateTap: () => _navigateToCreate(context, ref),
             );
           }
           return ListView.separated(
@@ -34,11 +35,46 @@ class GoalsScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.pushNamed(AppRoutes.goalCreate),
+        onPressed: () => _navigateToCreate(context, ref),
         tooltip: 'New Goal',
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  /// Navigates to [CreateGoalScreen], or shows an upgrade prompt if the
+  /// free-tier goal limit has been reached.
+  void _navigateToCreate(BuildContext context, WidgetRef ref) {
+    final isPremium = ref.read(isPremiumProvider);
+    final goals = ref.read(goalNotifierProvider).valueOrNull ?? [];
+    if (!isPremium && goals.length >= FreeTier.maxGoals) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.workspace_premium, size: 32),
+          title: const Text('Goal limit reached'),
+          content: Text(
+            'Free accounts support up to ${FreeTier.maxGoals} goals. '
+            'Upgrade to Premium for unlimited goals and more.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Not now'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.pushNamed(AppRoutes.premiumUpgrade);
+              },
+              child: const Text('Upgrade'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    context.pushNamed(AppRoutes.goalCreate);
   }
 }
 
