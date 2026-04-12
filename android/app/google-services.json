@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "336672957023",
+    "project_id": "sipfolio-94229",
+    "storage_bucket": "sipfolio-94229.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336672957023:android:d4197369796a16b20b71ea",
+        "android_client_info": {
+          "package_name": "com.jk.sipfolio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7aRALEzxu5rjVIJOQTig-0qjwTAa2RMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336672957023:android:b5dcf67ca4a667d50b71ea",
+        "android_client_info": {
+          "package_name": "com.sipfolio.sipfolio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7aRALEzxu5rjVIJOQTig-0qjwTAa2RMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
