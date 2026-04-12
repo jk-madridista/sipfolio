@@ -35,7 +35,7 @@ class NotificationService {
     // 1. Timezone
     tz_data.initializeTimeZones();
     final timeZoneName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+    tz.setLocalLocation(tz.getLocation(timeZoneName.name));
 
     // 2. flutter_local_notifications
     const androidSettings =
