@@ -151,8 +151,7 @@ class DashboardScreen extends ConsumerWidget {
 class _BannerAdWidget extends StatefulWidget {
   const _BannerAdWidget();
 
-  /// AdMob test banner ad unit ID (Android).
-  static const _adUnitId = 'ca-app-pub-3940256099942544/6300978111';
+  static const _adUnitId = AdConfig.testBannerAdUnitId;
 
   @override
   State<_BannerAdWidget> createState() => _BannerAdWidgetState();
@@ -309,7 +308,7 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               VerticalDivider(
-                color: colorScheme.onPrimaryContainer.withOpacity(0.2),
+                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
                 width: 1,
                 indent: 4,
                 endIndent: 4,
@@ -323,7 +322,7 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               VerticalDivider(
-                color: colorScheme.onPrimaryContainer.withOpacity(0.2),
+                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
                 width: 1,
                 indent: 4,
                 endIndent: 4,
@@ -363,7 +362,7 @@ class _SummaryItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: color.withOpacity(0.7)),
+        Icon(icon, size: 20, color: color.withValues(alpha: 0.7)),
         const SizedBox(height: 6),
         Text(
           value,
@@ -376,7 +375,7 @@ class _SummaryItem extends StatelessWidget {
         Text(
           label,
           style: textTheme.labelSmall?.copyWith(
-            color: color.withOpacity(0.7),
+            color: color.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -400,55 +399,63 @@ class _GoalCard extends StatelessWidget {
         : 0.0;
     final completion = _projectedCompletion(goal);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.pushNamed(
-          AppRoutes.goalDetail,
-          pathParameters: {'id': goal.id},
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title row
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      goal.title,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+    return Hero(
+      tag: 'goal-card-${goal.id}',
+      transitionOnUserGestures: true,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.pushNamed(
+            AppRoutes.goalDetail,
+            pathParameters: {'id': goal.id},
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        goal.title,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(0)}%',
-                    style: textTheme.labelMedium?.copyWith(
-                      color: progress >= 1.0
-                          ? Colors.green
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Text(
+                      '${(progress * 100).toStringAsFixed(0)}%',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: progress >= 1.0
+                            ? Colors.green
+                            : colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Progress bar
-              LinearProgressIndicator(
-                value: progress,
-                minHeight: 6,
-                borderRadius: BorderRadius.circular(4),
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  progress >= 1.0 ? Colors.green : colorScheme.primary,
+                  ],
                 ),
-              ),
+                const SizedBox(height: 10),
+
+                // Animated progress bar
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, value, __) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 6,
+                    borderRadius: BorderRadius.circular(4),
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      progress >= 1.0 ? Colors.green : colorScheme.primary,
+                    ),
+                  ),
+                ),
               const SizedBox(height: 6),
 
               // Amount labels
@@ -507,7 +514,8 @@ class _GoalCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),   // Card
+    );   // Hero
   }
 }
 
