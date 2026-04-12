@@ -41,7 +41,7 @@ abstract final class AppTheme {
       ),
 
       // ── Cards ─────────────────────────────────────────────────────────────
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
         color: cs.surfaceContainerLow,
@@ -143,7 +143,7 @@ abstract final class AppTheme {
       ),
 
       // ── Dialogs ───────────────────────────────────────────────────────────
-      dialogTheme: const DialogTheme(
+      dialogTheme: const DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(24)),
         ),
