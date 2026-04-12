@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/auth/screens/email_signin_screen.dart';
 import '../features/auth/screens/login_screen.dart';
@@ -16,8 +15,6 @@ import '../features/sip/screens/sip_screen.dart';
 import '../providers/auth_notifier.dart';
 import '../shared/constants.dart';
 
-part 'routes.g.dart';
-
 /// A [ChangeNotifier] that triggers GoRouter to re-evaluate its redirect logic
 /// whenever the authentication state changes.
 class _AuthRouterNotifier extends ChangeNotifier {
@@ -26,8 +23,7 @@ class _AuthRouterNotifier extends ChangeNotifier {
   }
 }
 
-@riverpod
-GoRouter router(Ref ref) {
+final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRouterNotifier(ref);
   ref.onDispose(notifier.dispose);
 
@@ -118,4 +114,4 @@ GoRouter router(Ref ref) {
       ),
     ],
   );
-}
+});

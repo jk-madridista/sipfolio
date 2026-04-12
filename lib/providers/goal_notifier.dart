@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/goal.dart';
 import '../providers/auth_notifier.dart';
@@ -8,8 +7,6 @@ import '../providers/user_profile_provider.dart';
 import '../services/goal_repository.dart';
 import '../services/notification_service.dart';
 import '../shared/constants.dart';
-
-part 'goal_notifier.g.dart';
 
 /// Thrown by [GoalNotifier.createGoal] when a free-tier user attempts to
 /// exceed [FreeTier.maxGoals].
@@ -22,12 +19,24 @@ class GoalLimitReachedException implements Exception {
       'Upgrade to Premium for unlimited goals.';
 }
 
+final goalNotifierProvider =
+    StreamNotifierProvider<GoalNotifier, List<Goal>>(GoalNotifier.new);
+
+/// Returns a single [Goal] by [goalId] from the current goals stream,
+/// or null if not found.
+final goalByIdProvider = Provider.family<Goal?, String>((ref, goalId) {
+  final goals = ref.watch(goalNotifierProvider).valueOrNull ?? [];
+  for (final g in goals) {
+    if (g.id == goalId) return g;
+  }
+  return null;
+});
+
 /// Streams the authenticated user's goals and exposes CRUD operations.
 ///
 /// Uses a Firestore real-time listener so mutations from other devices are
 /// reflected automatically without manual state updates.
-@riverpod
-class GoalNotifier extends _$GoalNotifier {
+class GoalNotifier extends StreamNotifier<List<Goal>> {
   @override
   Stream<List<Goal>> build() {
     final user = ref.watch(authNotifierProvider).valueOrNull;
@@ -53,7 +62,7 @@ class GoalNotifier extends _$GoalNotifier {
     // Free-tier limit check — reads the latest known value without awaiting
     // a network round-trip, so there is no extra latency on the happy path.
     final isPremium = ref.read(isPremiumProvider);
-    final currentGoals = ref.read(goalNotifierProvider).valueOrNull ?? [];
+    final currentGoals = state.valueOrNull ?? [];
     if (!isPremium && currentGoals.length >= FreeTier.maxGoals) {
       throw const GoalLimitReachedException();
     }
@@ -103,13 +112,3 @@ class GoalNotifier extends _$GoalNotifier {
       ref.read(notificationPreferencesProvider).valueOrNull ?? true;
 }
 
-/// Returns a single [Goal] by [goalId] from the current goals stream,
-/// or null if not found.
-@riverpod
-Goal? goalById(Ref ref, String goalId) {
-  final goals = ref.watch(goalNotifierProvider).valueOrNull ?? [];
-  for (final g in goals) {
-    if (g.id == goalId) return g;
-  }
-  return null;
-}

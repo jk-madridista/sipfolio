@@ -2,20 +2,19 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../services/auth_service.dart';
 import '../services/user_profile_repository.dart';
 
-part 'auth_notifier.g.dart';
+final authNotifierProvider =
+    AsyncNotifierProvider<AuthNotifier, User?>(AuthNotifier.new);
 
 /// Tracks the current Firebase [User] (or null when signed out).
 ///
 /// Exposes sign-in / sign-out actions that update state with loading and
 /// error handling. On successful sign-in the user's Firestore [UserProfile]
 /// document is created if it does not yet exist.
-@riverpod
-class AuthNotifier extends _$AuthNotifier {
+class AuthNotifier extends AsyncNotifier<User?> {
   StreamSubscription<User?>? _authSub;
 
   @override

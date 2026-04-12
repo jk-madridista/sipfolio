@@ -1,15 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/goal.dart';
 import '../models/sip_entry.dart';
 import '../shared/constants.dart';
 
-part 'goal_repository.g.dart';
-
-@riverpod
-GoalRepository goalRepository(Ref ref) => GoalRepository();
+final goalRepositoryProvider = Provider<GoalRepository>((ref) => GoalRepository());
 
 class GoalRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -25,7 +21,10 @@ class GoalRepository {
   String generateGoalId(String userId) => _goalsRef(userId).doc().id;
 
   Stream<List<Goal>> watchGoals(String userId) {
-    return _goalsRef(userId).orderBy('createdAt', descending: true).snapshots().map(
+    return _goalsRef(userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
           (snap) => snap.docs
               .map((doc) => Goal.fromJson({...doc.data(), 'id': doc.id}))
               .toList(),

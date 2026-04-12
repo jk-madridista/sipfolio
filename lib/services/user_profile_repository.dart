@@ -1,16 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/user_profile.dart';
 import '../shared/constants.dart';
 
-part 'user_profile_repository.g.dart';
-
-@riverpod
-UserProfileRepository userProfileRepository(Ref ref) =>
-    UserProfileRepository();
+final userProfileRepositoryProvider =
+    Provider<UserProfileRepository>((ref) => UserProfileRepository());
 
 class UserProfileRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -18,8 +14,7 @@ class UserProfileRepository {
   /// Creates a [UserProfile] document in Firestore for [user] if one does not
   /// already exist. Safe to call on every login.
   Future<void> ensureUserProfile(User user) async {
-    final docRef =
-        _firestore.collection(Collections.users).doc(user.uid);
+    final docRef = _firestore.collection(Collections.users).doc(user.uid);
     final snapshot = await docRef.get();
     if (!snapshot.exists) {
       final profile = UserProfile(

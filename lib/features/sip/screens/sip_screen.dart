@@ -203,7 +203,7 @@ class _ResultsCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: 1 - returnsRatio,
                 minHeight: 10,
-                backgroundColor: colorScheme.secondary.withOpacity(0.8),
+                backgroundColor: colorScheme.secondary.withValues(alpha: 0.8),
                 color: colorScheme.surfaceContainerHighest,
               ),
             ),
@@ -363,7 +363,7 @@ class _GrowthChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.primary.withOpacity(0.08),
+                        color: colorScheme.primary.withValues(alpha: 0.08),
                       ),
                     ),
                   ],

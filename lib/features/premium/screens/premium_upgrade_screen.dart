@@ -74,7 +74,7 @@ class PremiumUpgradeScreen extends StatelessWidget {
                         'Unlock the full experience',
                         style: textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onPrimaryContainer
-                              .withOpacity(0.75),
+                              .withValues(alpha: 0.75),
                         ),
                       ),
                     ],
@@ -108,7 +108,7 @@ class PremiumUpgradeScreen extends StatelessWidget {
                         'One-time purchase',
                         style: textTheme.labelLarge?.copyWith(
                           color: colorScheme.onPrimaryContainer
-                              .withOpacity(0.75),
+                              .withValues(alpha: 0.75),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -124,7 +124,7 @@ class PremiumUpgradeScreen extends StatelessWidget {
                         'Lifetime access — no subscription',
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onPrimaryContainer
-                              .withOpacity(0.75),
+                              .withValues(alpha: 0.75),
                         ),
                       ),
                     ],
