@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sipfolio splash logo: white rounded square card containing a teal
+  bar-chart with an upward-trending arrow — mirrors the app's brand icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+  <!-- White rounded-square background -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M24,8 L72,8 Q88,8 88,24 L88,72 Q88,88 72,88 L24,88 Q8,88 8,72 L8,24 Q8,8 24,8 Z"/>
+
+  <!-- Bar 1 (short) -->
+  <path
+      android:fillColor="#006B75"
+      android:pathData="M18,56 L30,56 L30,76 L18,76 Z"/>
+
+  <!-- Bar 2 (medium) -->
+  <path
+      android:fillColor="#006B75"
+      android:pathData="M36,44 L48,44 L48,76 L36,76 Z"/>
+
+  <!-- Bar 3 (tall) -->
+  <path
+      android:fillColor="#006B75"
+      android:pathData="M54,32 L66,32 L66,76 L54,76 Z"/>
+
+  <!-- Upward-trending arrow overlay (darker teal) -->
+  <path
+      android:fillColor="#004D57"
+      android:pathData="M54,18 L74,18 L74,38 L68,32 L54,46 L42,36 L26,52 L20,46 L38,28 L50,38 Z"/>
+
+</vector>

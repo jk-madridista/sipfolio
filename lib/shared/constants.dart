@@ -16,6 +16,7 @@ abstract final class AppRoutes {
 
 /// App metadata.
 abstract final class AppMeta {
+  static const name = 'Sipfolio';
   static const version = '1.0.0';
   static const buildNumber = '1';
   static const versionString = '$version ($buildNumber)';
@@ -55,4 +56,14 @@ abstract final class NotificationConfig {
 /// SharedPreferences key names.
 abstract final class PrefsKeys {
   static const notificationsEnabled = 'notifications_enabled';
+  static const darkMode = 'dark_mode';
+}
+
+/// AdMob configuration.
+///
+/// Replace [testBannerAdUnitId] with a production unit ID before release.
+abstract final class AdConfig {
+  /// Google-provided test banner — safe to use during development on any device.
+  static const testBannerAdUnitId =
+      'ca-app-pub-3940256099942544/6300978111';
 }

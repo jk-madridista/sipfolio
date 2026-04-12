@@ -104,11 +104,17 @@ class _GoalTile extends ConsumerWidget {
       confirmDismiss: (_) => _confirmDelete(context, goal.title),
       onDismissed: (_) =>
           ref.read(goalNotifierProvider.notifier).deleteGoal(goal.id),
-      child: InkWell(
-        onTap: () => context.pushNamed(
-          AppRoutes.goalDetail,
-          pathParameters: {'id': goal.id},
-        ),
+      child: Hero(
+        tag: 'goal-card-${goal.id}',
+        transitionOnUserGestures: true,
+        // Wrap in Material so InkWell ink effects survive the Hero overlay.
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: () => context.pushNamed(
+              AppRoutes.goalDetail,
+              pathParameters: {'id': goal.id},
+            ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Column(
@@ -162,8 +168,10 @@ class _GoalTile extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
+      ),    // InkWell
+    ),      // Material
+   ),       // Hero
+    );      // Dismissible
   }
 
   Future<bool?> _confirmDelete(BuildContext context, String title) {

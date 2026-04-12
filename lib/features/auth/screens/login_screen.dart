@@ -92,12 +92,12 @@ class LoginScreen extends ConsumerWidget {
                   minimumSize: const Size.fromHeight(52),
                 ),
                 icon: isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                         ),
                       )
                     : const Icon(Icons.login_rounded),

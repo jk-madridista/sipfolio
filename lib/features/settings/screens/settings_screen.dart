@@ -6,6 +6,7 @@ import '../../../models/goal.dart';
 import '../../../providers/auth_notifier.dart';
 import '../../../providers/goal_notifier.dart';
 import '../../../providers/notification_provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../../../providers/user_profile_provider.dart';
 import '../../../services/notification_service.dart';
 import '../../../shared/constants.dart';
@@ -20,6 +21,8 @@ class SettingsScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
     final prefsAsync = ref.watch(notificationPreferencesProvider);
     final notificationsEnabled = prefsAsync.valueOrNull ?? true;
+    final themeAsync = ref.watch(themeModeProvider);
+    final isDark = themeAsync.valueOrNull == ThemeMode.dark;
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -97,8 +100,18 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
           ],
 
-          // ── Notifications ──────────────────────────────────────────────────
+          // ── Preferences ────────────────────────────────────────────────────
           const _SectionHeader(label: 'Preferences'),
+          SwitchListTile(
+            secondary: const Icon(Icons.dark_mode_outlined),
+            title: const Text('Dark Mode'),
+            subtitle: const Text('Use dark colour scheme'),
+            value: isDark,
+            onChanged: themeAsync.isLoading
+                ? null
+                : (val) =>
+                    ref.read(themeModeProvider.notifier).setDark(val),
+          ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_outlined),
             title: const Text('SIP Reminders'),

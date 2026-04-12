@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
+    <!-- Brand teal background -->
+    <item android:drawable="@color/splash_background" />
+    <!-- Centred logo at 144 × 144 dp -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/ic_sipfolio"
+            android:width="144dp"
+            android:height="144dp" />
+    </item>
 </layer-list>

@@ -68,13 +68,16 @@ class _GoalDetailView extends ConsumerWidget {
         slivers: [
           // ── Progress card ───────────────────────────────────────────────
           SliverToBoxAdapter(
-            child: Card(
+            child: Hero(
+              tag: 'goal-card-${goal.id}',
+              transitionOnUserGestures: true,
+              child: Card(
               margin: const EdgeInsets.all(16),
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Circular progress
+                    // Animated circular progress
                     SizedBox(
                       width: 140,
                       height: 140,
@@ -82,13 +85,20 @@ class _GoalDetailView extends ConsumerWidget {
                         alignment: Alignment.center,
                         children: [
                           SizedBox.expand(
-                            child: CircularProgressIndicator(
-                              value: progress,
-                              strokeWidth: 14,
-                              backgroundColor: colorScheme.surfaceContainerHighest,
-                              color: progress >= 1.0
-                                  ? Colors.green
-                                  : colorScheme.primary,
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0, end: progress),
+                              duration: const Duration(milliseconds: 1200),
+                              curve: Curves.easeOutCubic,
+                              builder: (_, value, __) =>
+                                  CircularProgressIndicator(
+                                value: value,
+                                strokeWidth: 14,
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHighest,
+                                color: progress >= 1.0
+                                    ? Colors.green
+                                    : colorScheme.primary,
+                              ),
                             ),
                           ),
                           Column(
@@ -101,7 +111,7 @@ class _GoalDetailView extends ConsumerWidget {
                                 ),
                               ),
                               if (progress >= 1.0)
-                                Icon(Icons.check_circle,
+                                const Icon(Icons.check_circle,
                                     color: Colors.green, size: 20),
                             ],
                           ),
@@ -164,7 +174,8 @@ class _GoalDetailView extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
+            ),   // Card
+            ),   // Hero
           ),
 
           // ── Projection chart ────────────────────────────────────────────
@@ -707,7 +718,7 @@ class _ProjectionChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.primary.withOpacity(0.08),
+                        color: colorScheme.primary.withValues(alpha: 0.08),
                       ),
                     ),
                   ],
