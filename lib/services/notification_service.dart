@@ -40,7 +40,7 @@ class NotificationService {
     // 2. flutter_local_notifications
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
@@ -48,7 +48,8 @@ class NotificationService {
     await _plugin.initialize(
       const InitializationSettings(
         android: androidSettings,
-        iOS: iosSettings,
+        iOS: darwinSettings,
+        macOS: darwinSettings,
       ),
     );
 
@@ -68,7 +69,8 @@ class NotificationService {
   Future<bool> requestAndroidPermission() async {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    return await android?.requestNotificationsPermission() ?? true;
+    if (android == null) return true;
+    return await android.requestNotificationsPermission() ?? true;
   }
 
   // ── Scheduling ────────────────────────────────────────────────────────────

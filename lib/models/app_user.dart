@@ -1,18 +1,49 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class AppUser {
+  const AppUser({
+    required this.uid,
+    required this.email,
+    this.displayName,
+    this.photoUrl,
+    this.isPremium = false,
+  });
 
-part 'app_user.freezed.dart';
-part 'app_user.g.dart';
+  final String uid;
+  final String email;
+  final String? displayName;
+  final String? photoUrl;
+  final bool isPremium;
 
-@freezed
-class AppUser with _$AppUser {
-  const factory AppUser({
-    required String uid,
-    required String email,
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
+      uid: json['uid'] as String,
+      email: json['email'] as String,
+      displayName: json['displayName'] as String?,
+      photoUrl: json['photoUrl'] as String?,
+      isPremium: json['isPremium'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'uid': uid,
+        'email': email,
+        'displayName': displayName,
+        'photoUrl': photoUrl,
+        'isPremium': isPremium,
+      };
+
+  AppUser copyWith({
+    String? uid,
+    String? email,
     String? displayName,
     String? photoUrl,
-    @Default(false) bool isPremium,
-  }) = _AppUser;
-
-  factory AppUser.fromJson(Map<String, dynamic> json) =>
-      _$AppUserFromJson(json);
+    bool? isPremium,
+  }) {
+    return AppUser(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
+      isPremium: isPremium ?? this.isPremium,
+    );
+  }
 }

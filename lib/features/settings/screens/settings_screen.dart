@@ -297,7 +297,7 @@ class _UpgradeCard extends StatelessWidget {
                         'Unlimited goals · No ads · CSV export',
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onPrimaryContainer
-                              .withOpacity(0.75),
+                              .withValues(alpha: 0.75),
                         ),
                       ),
                     ],
