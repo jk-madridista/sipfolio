@@ -1,16 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 
-import 'notification_service_mobile.dart'
-    if (dart.library.html) 'notification_service_stub.dart';
-
-export 'notification_service_mobile.dart'
-    if (dart.library.html) 'notification_service_stub.dart'
-    show NotificationService;
-
-/// Provides a single shared [NotificationService] instance.
-final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
-});
+import '../models/goal.dart';
+import '../shared/constants.dart';
 
 /// Manages local SIP-reminder notifications and Firebase Cloud Messaging
 /// permission.
@@ -34,7 +30,7 @@ class NotificationService {
     // 1. Timezone
     tz_data.initializeTimeZones();
     final timeZoneName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName.identifier));
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     // 2. flutter_local_notifications
     const androidSettings =

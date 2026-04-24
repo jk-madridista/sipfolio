@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../models/goal.dart';
 import '../../../providers/auth_notifier.dart';
@@ -11,6 +9,7 @@ import '../../../providers/goal_notifier.dart';
 import '../../../providers/user_profile_provider.dart';
 import '../../../services/sip_projection_engine.dart';
 import '../../../shared/constants.dart';
+import '../../../shared/widgets/banner_ad_widget.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -63,7 +62,7 @@ class DashboardScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Banner ad — shown only for free users.
-          if (!isPremium) const _BannerAdWidget(),
+          if (!isPremium) const BannerAdWidget(),
           NavigationBar(
             selectedIndex: 0,
             onDestinationSelected: (index) {
@@ -140,67 +139,6 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Banner ad ─────────────────────────────────────────────────────────────────
-
-/// Loads and displays an AdMob banner. Uses the public test ad-unit ID so no
-/// real inventory is needed during development. Swap to a production unit ID
-/// before release.
-class _BannerAdWidget extends StatefulWidget {
-  const _BannerAdWidget();
-
-  static const _adUnitId = AdConfig.testBannerAdUnitId;
-
-  @override
-  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
-}
-
-class _BannerAdWidgetState extends State<_BannerAdWidget> {
-  BannerAd? _bannerAd;
-  bool _isLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAd();
-  }
-
-  void _loadAd() {
-    if (kIsWeb) return;
-    final ad = BannerAd(
-      adUnitId: _BannerAdWidget._adUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          if (mounted) setState(() => _isLoaded = true);
-        },
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: $error');
-          ad.dispose();
-        },
-      ),
-    );
-    ad.load();
-    _bannerAd = ad;
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
-    return SizedBox(
-      height: _bannerAd!.size.height.toDouble(),
-      width: double.infinity,
-      child: AdWidget(ad: _bannerAd!),
     );
   }
 }
