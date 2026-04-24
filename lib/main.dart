@@ -1,21 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'app/app.dart';
 import 'services/notification_service.dart';
-
-/// Top-level FCM background message handler.
-///
-/// Must be a top-level function and annotated with `@pragma('vm:entry-point')`
-/// so the AOT compiler does not tree-shake it.
-@pragma('vm:entry-point')
-Future<void> _fcmBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-}
+import 'utils/ads_initializer.dart';
+import 'utils/fcm_initializer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,20 +17,16 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
   }
 
-  if (!kIsWeb) {
-    await MobileAds.instance.initialize();
-    // FCM background handler must be registered before runApp.
-    FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
-  }
+  // Conditional imports in the helpers make these safe on every platform.
+  await initializeAds();
+  await initializeFcm();
 
   // Pre-initialise the notification service (timezone DB + channels) so the
   // first scheduleMonthlyReminder call has no extra setup latency. The same
   // instance is injected via ProviderScope so the whole app shares it.
-  // Skipped on web — flutter_local_notifications is not supported there.
+  // Skipped on web — the stub's initialize() is a no-op.
   final notificationService = NotificationService();
-  if (!kIsWeb) {
-    await notificationService.initialize();
-  }
+  await notificationService.initialize();
 
   runApp(
     ProviderScope(
