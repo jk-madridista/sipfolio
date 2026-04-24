@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"sipfolio-94229","appId":"1:336672957023:android:b5dcf67ca4a667d50b71ea","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"sipfolio-94229","configurations":{"android":"1:336672957023:android:b5dcf67ca4a667d50b71ea"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sipfolio-94229",
+          "appId": "1:336672957023:android:b5dcf67ca4a667d50b71ea",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sipfolio-94229",
+          "configurations": {
+            "android": "1:336672957023:android:b5dcf67ca4a667d50b71ea"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
