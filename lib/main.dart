@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -18,17 +19,27 @@ Future<void> _fcmBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await MobileAds.instance.initialize();
 
-  // Must be registered before runApp.
-  FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
+
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+    // FCM background handler must be registered before runApp.
+    FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
+  }
 
   // Pre-initialise the notification service (timezone DB + channels) so the
   // first scheduleMonthlyReminder call has no extra setup latency. The same
   // instance is injected via ProviderScope so the whole app shares it.
+  // Skipped on web — flutter_local_notifications is not supported there.
   final notificationService = NotificationService();
-  await notificationService.initialize();
+  if (!kIsWeb) {
+    await notificationService.initialize();
+  }
 
   runApp(
     ProviderScope(

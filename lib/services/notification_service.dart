@@ -1,4 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -30,7 +31,7 @@ class NotificationService {
   ///
   /// Safe to call multiple times — subsequent calls are no-ops.
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (kIsWeb || _initialized) return;
 
     // 1. Timezone
     tz_data.initializeTimeZones();
@@ -67,6 +68,7 @@ class NotificationService {
   ///
   /// Returns `true` if permission was granted or already held.
   Future<bool> requestAndroidPermission() async {
+    if (kIsWeb) return true;
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return true;
@@ -125,7 +127,8 @@ class NotificationService {
   // ── Private helpers ───────────────────────────────────────────────────────
 
   Future<void> _ensureInitialized() async {
-    if (!_initialized) await initialize();
+    if (kIsWeb || _initialized) return;
+    await initialize();
   }
 
   /// Converts a goal ID string to a stable int notification ID.

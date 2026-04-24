@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -168,6 +169,7 @@ class _BannerAdWidgetState extends State<_BannerAdWidget> {
   }
 
   void _loadAd() {
+    if (kIsWeb) return;
     final ad = BannerAd(
       adUnitId: _BannerAdWidget._adUnitId,
       size: AdSize.banner,
